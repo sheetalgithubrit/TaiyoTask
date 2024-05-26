@@ -1,0 +1,248 @@
+/*tailwind.config.js*/
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+
+
+
+
+Update src/index.css:
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+
+
+(contactSlice.ts):
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { RootState } from './store';
+
+interface Contact {
+  id: string;
+  firstName: string;
+  lastName: string;
+  status: 'Active' | 'Inactive';
+}
+interface ContactState {
+  contacts: Contact[];
+}
+const initialState: ContactState = {
+  contacts: [],
+};
+const contactSlice = createSlice({
+  name: 'contact',
+  initialState,
+  reducers: {
+    addContact: (state, action: PayloadAction<Contact>) => {
+      state.contacts.push(action.payload);
+    },
+    updateContact: (state, action: PayloadAction<Contact>) => {
+      const index = state.contacts.findIndex(contact => contact.id === action.payload.id);
+      if (index !== -1) {
+        state.contacts[index] = action.payload;
+      }
+    },
+    deleteContact: (state, action: PayloadAction<string>) => {
+      state.contacts = state.contacts.filter(contact => contact.id !== action.payload);
+    },
+  },
+});
+export const { addContact, updateContact, deleteContact } = contactSlice.actions;
+export const selectContacts = (state: RootState) => state.contact.contacts;
+export default contactSlice.reducer;
+
+
+
+
+
+
+(store.ts):
+import { configureStore } from '@reduxjs/toolkit';
+import contactReducer from './contactSlice';
+
+export const store = configureStore({
+  reducer: {
+    contact: contactReducer,
+  },
+});
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+
+
+
+
+
+
+
+(ContactForm.tsx):
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { addContact } from '../redux/contactSlice';
+
+const ContactForm: React.FC = () => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [status, setStatus] = useState<'Active' | 'Inactive'>('Active');
+  const dispatch = useDispatch();
+
+  const handleSubmit = () => {
+    dispatch(addContact({
+      id: Date.now().toString(),
+      firstName,
+      lastName,
+      status,
+    }));
+    setFirstName('');
+    setLastName('');
+    setStatus('Active');
+  };
+
+  return (
+    <div className="p-4 border rounded">
+      <h2 className="text-lg font-bold mb-4">Create Contact</h2>
+      <input
+        className="border p-2 mb-2 w-full"
+        type="text"
+        placeholder="First Name"
+        value={firstName}
+        onChange={(e) => setFirstName(e.target.value)}
+      />
+      <input
+        className="border p-2 mb-2 w-full"
+        type="text"
+        placeholder="Last Name"
+        value={lastName}
+        onChange={(e) => setLastName(e.target.value)}
+      />
+      <div className="mb-2">
+        <label>
+          <input
+            type="radio"
+            checked={status === 'Active'}
+            onChange={() => setStatus('Active')}
+          />
+          Active
+        </label>
+        <label>
+          <input
+            type="radio"
+            checked={status === 'Inactive'}
+            onChange={() => setStatus('Inactive')}
+          />
+          Inactive
+        </label>
+      </div>
+      <button onClick={handleSubmit} className="bg-blue-500 text-white px-4 py-2 rounded">Save Contact</button>
+    </div>
+  );
+};
+export default ContactForm;
+
+
+
+
+
+(ContactList.tsx):
+import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectContacts, deleteContact } from '../redux/contactSlice';
+
+const ContactList: React.FC = () => {
+  const contacts = useSelector(selectContacts);
+  const dispatch = useDispatch();
+
+  return (
+    <div className="p-4 border rounded">
+      <h2 className="text-lg font-bold mb-4">Contact List</h2>
+      {contacts.length === 0 ? (
+        <p>No Contacts Found. Please add contacts.</p>
+      ) : (
+        contacts.map(contact => (
+          <div key={contact.id} className="flex justify-between items-center mb-2">
+            <div>
+              {contact.firstName} {contact.lastName} ({contact.status})
+            </div>
+            <div>
+              <button className="bg-yellow-500 text-white px-2 py-1 rounded mr-2">Edit</button>
+              <button
+                onClick={() => dispatch(deleteContact(contact.id))}
+                className="bg-red-500 text-white px-2 py-1 rounded"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+};
+export default ContactList
+
+
+
+
+
+(ContactPage.tsx):
+import React from 'react';
+import ContactForm from '../components/ContactForm';
+import ContactList from '../components/ContactList';
+
+const ContactPage: React.FC = () => {
+  return (
+    <div className="p-4">
+      <ContactForm />
+      <ContactList />
+    </div>
+  );
+};
+export default ContactPage;
+
+
+
+
+
+(ChartsAndMapsPage.tsx):
+import React from 'react';
+const ChartsAndMapsPage: React.FC = () => {
+  return (
+    <div className="p-4">
+      <h2 className="text-lg font-bold mb-4">Charts and Maps</h2>
+      {/* Add Chart and Map components here */}
+    </div>
+  );
+};
+export default ChartsAndMapsPage;
+
+
+
+
+(App.tsx):
+import React from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
+import ContactPage from './pages/ContactPage';
+import ChartsAndMapsPage from './pages/ChartsAndMapsPage';
+
+const App: React.FC = () => {
+  return (
+    <div className="flex">
+      <nav className="w-1/4 bg-gray-200 p-4
+
+
+
+
+
+
+
+
+
